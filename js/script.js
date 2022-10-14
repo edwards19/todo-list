@@ -1,5 +1,6 @@
 const todoList = document.querySelector('.todolist');
 const taskList = todoList.querySelector('.todolist__tasks');
+const deleteTasks = [...todoList.querySelectorAll(".task__delete-button")];
 
 todoList.addEventListener('submit', event => {
   event.preventDefault();
@@ -15,6 +16,16 @@ todoList.addEventListener('submit', event => {
   const taskElement = createTaskElement(inputValue);
 
   taskList.appendChild(taskElement);
+})
+
+todoList.addEventListener('click', event => {
+  if (!event.target.matches('.task__delete-button')) return;
+  const taskElement = event.target.parentElement
+  taskElement.remove();
+
+  if (taskList.children.length === 0) {
+    taskList.innerHTML = '';
+  }
 })
 
 const generateUniqueString = (length) =>
