@@ -1,27 +1,74 @@
 const todoList = document.querySelector(".todolist");
 const taskList = todoList.querySelector(".todolist__tasks");
-const deleteTasks = [...todoList.querySelectorAll(".task__delete-button")];
 const emptyStateDiv = todoList.querySelector('.todolist__empty-state');
+
+const axiosI = axios.create({
+  baseURL: "https://api.learnjavascript.today",
+});
+
+//Code to create a user
+// axiosI.post('/users', {
+//   username: 'jsdeveloper19',
+//   password: '87654321'
+// })
+//   .then(response => console.log(response.data))
+//   .catch(error => console.log(error));
+
+const auth = {
+  username: "jsdeveloper19",
+  password: "87654321",
+};
+
+axiosI
+  .get("/tasks", { auth })
+  .then((response) => {
+    const tasks = response.data;
+    tasks.forEach((task) => {
+      const taskElement = createTaskElement(task);
+      taskList.append(taskElement);
+
+      emptyStateDiv.textContent = "Your todo list is empty. Yay! 🎉";
+    });
+    console.log(tasks);
+  })
+  .catch((error) => console.error(error));
 
 todoList.addEventListener("submit", (event) => {
   event.preventDefault();
 
   const newTaskField = todoList.querySelector("input");
-  const inputValue = newTaskField.value.trim();
-  console.log(inputValue);
+  const inputValue = DOMPurify.sanitize(newTaskField.value.trim());
 
-  newTaskField.value = "";
-  newTaskField.focus();
   if (!inputValue) return;
 
-  const id = generateUniqueString(10);
-  const taskElement = createTaskElement({
-    id, 
-    name: inputValue,
-    done: false
-  });
+  const newTaskButton = todoList.querySelector('button');
+  newTaskButton.setAttribute('disabled', true)
 
-  taskList.appendChild(taskElement);
+  const buttonTextElement = newTaskButton.querySelector('span');
+  buttonTextElement.textContent = 'Adding task...'
+
+  axiosI.post("/tasks",
+      {
+        name: inputValue,
+      },
+      {
+        auth
+      }
+    )
+    .then((response) => {
+      console.log(response)
+      const task = response.data;
+      const taskElement = createTaskElement(task);
+      taskList.appendChild(taskElement);
+
+      newTaskField.value = "";
+      newTaskField.focus();
+    })
+    .catch((error) => console.log(error))
+    .finally(() => {
+      newTaskButton.removeAttribute('disabled');
+      buttonTextElement.textContent = 'Add task';
+    })
 });
 
 todoList.addEventListener("click", (event) => {
@@ -60,33 +107,4 @@ const createTaskElement = ({id, name, done}) => {
   return taskElement;
 };
 
-const axiosI = axios.create({
-  baseURL: "https://api.learnjavascript.today",
-});
 
-//Code to create a user
-// axiosI.post('/users', {
-//   username: 'jsdeveloper19',
-//   password: '87654321'
-// })
-//   .then(response => console.log(response.data))
-//   .catch(error => console.log(error));
-
-const auth = {
-  username: "jsdeveloper19",
-  password: "87654321",
-};
-
-axiosI
-  .get("/tasks", { auth })
-  .then((response) => {
-    const tasks = response.data;
-    tasks.forEach(task => {
-      const taskElement = createTaskElement(task);
-      taskList.append(taskElement);
-
-    emptyStateDiv.textContent = "Your todo list is empty. Yay! 🎉";  
-    })
-    console.log(tasks)
-  })
-  .catch((error) => console.error(error));
