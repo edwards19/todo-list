@@ -81,6 +81,37 @@ todoList.addEventListener("click", (event) => {
   }
 });
 
+taskList.addEventListener("input", debounce(function(event) {
+    const input = event.target;
+    const taskElement = input.parentElement;
+    const checkbox = taskElement.querySelector('input[type="checkbox"]');
+    const taskInput = taskElement.querySelector(".task__name");
+
+    const id = checkbox.id;
+    const done = checkbox.checked;
+    const name = DOMPurify.sanitize(taskInput.value.trim());
+
+    axiosI
+      .put(
+        `/tasks/${id}`,
+        {
+          name,
+          done,
+        },
+        {
+          auth,
+        }
+      )
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, 250)
+);
+  
+
 const generateUniqueString = (length) =>
   Math.random()
     .toString(36)
@@ -90,13 +121,13 @@ const createTaskElement = ({id, name, done}) => {
   const taskElement = document.createElement("li");
   taskElement.classList.add("task");
   taskElement.innerHTML = DOMPurify.sanitize(`
-  <input type="checkbox" id="${id}" />
+  <input type="checkbox" id="${id}" ${done ? 'checked' : ''}/>
   <label for="${id}">
     <svg viewBox="0 0 20 15">
       <path d="M0 8l2-2 5 5L18 0l2 2L7 15z" fill-rule="nonzero" />
     </svg>
   </label>
-  <span class="task__name">${name}</span>
+  <input class="task__name" value="${name}">
   <button type="button" class="task__delete-button">
     <svg viewBox="0 0 20 20">
       <path
@@ -107,4 +138,19 @@ const createTaskElement = ({id, name, done}) => {
   return taskElement;
 };
 
+function debounce(callback, wait, immediate) {
+  let timeout;
+  return function () {
+    const context = this;
+    const args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) callback.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) callback.apply(context, args);
+  };
+};
 
