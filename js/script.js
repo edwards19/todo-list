@@ -1,18 +1,10 @@
 const todoList = document.querySelector(".todolist");
 const taskList = todoList.querySelector(".todolist__tasks");
-const emptyStateDiv = todoList.querySelector('.todolist__empty-state');
+const emptyStateDiv = todoList.querySelector(".todolist__empty-state");
 
 const axiosI = axios.create({
   baseURL: "https://api.learnjavascript.today",
 });
-
-//Code to create a user
-// axiosI.post('/users', {
-//   username: 'jsdeveloper19',
-//   password: '87654321'
-// })
-//   .then(response => console.log(response.data))
-//   .catch(error => console.log(error));
 
 const auth = {
   username: "jsdeveloper19",
@@ -41,22 +33,24 @@ todoList.addEventListener("submit", (event) => {
 
   if (!inputValue) return;
 
-  const newTaskButton = todoList.querySelector('button');
-  newTaskButton.setAttribute('disabled', true)
+  const newTaskButton = todoList.querySelector("button");
+  newTaskButton.setAttribute("disabled", true);
 
-  const buttonTextElement = newTaskButton.querySelector('span');
-  buttonTextElement.textContent = 'Adding task...'
+  const buttonTextElement = newTaskButton.querySelector("span");
+  buttonTextElement.textContent = "Adding task...";
 
-  axiosI.post("/tasks",
+  axiosI
+    .post(
+      "/tasks",
       {
         name: inputValue,
       },
       {
-        auth
+        auth,
       }
     )
     .then((response) => {
-      console.log(response)
+      console.log(response);
       const task = response.data;
       const taskElement = createTaskElement(task);
       taskList.appendChild(taskElement);
@@ -66,22 +60,14 @@ todoList.addEventListener("submit", (event) => {
     })
     .catch((error) => console.log(error))
     .finally(() => {
-      newTaskButton.removeAttribute('disabled');
-      buttonTextElement.textContent = 'Add task';
-    })
+      newTaskButton.removeAttribute("disabled");
+      buttonTextElement.textContent = "Add task";
+    });
 });
 
-todoList.addEventListener("click", (event) => {
-  if (!event.target.matches(".task__delete-button")) return;
-  const taskElement = event.target.parentElement;
-  taskElement.remove();
-
-  if (taskList.children.length === 0) {
-    taskList.innerHTML = "";
-  }
-});
-
-taskList.addEventListener("input", debounce(function(event) {
+taskList.addEventListener(
+  "input",
+  debounce(function (event) {
     const input = event.target;
     const taskElement = input.parentElement;
     const checkbox = taskElement.querySelector('input[type="checkbox"]');
@@ -110,18 +96,36 @@ taskList.addEventListener("input", debounce(function(event) {
       });
   }, 250)
 );
-  
+
+todoList.addEventListener("click", (event) => {
+  if (!event.target.matches(".task__delete-button")) return;
+
+  const taskElement = event.target.parentElement;
+  const checkbox = taskElement.querySelector('input[type="checkbox"]');
+  const id = checkbox.id;
+
+  axiosI
+    .delete(`/tasks/${id}`, { auth })
+    .then((response) => {
+      taskElement.remove();
+
+      if (taskList.children.length === 0) {
+        taskList.innerHTML = "";
+      }
+    })
+    .catch((error) => console.error(error));
+});
 
 const generateUniqueString = (length) =>
   Math.random()
     .toString(36)
     .substring(2, 2 + length);
 
-const createTaskElement = ({id, name, done}) => {
+const createTaskElement = ({ id, name, done }) => {
   const taskElement = document.createElement("li");
   taskElement.classList.add("task");
   taskElement.innerHTML = DOMPurify.sanitize(`
-  <input type="checkbox" id="${id}" ${done ? 'checked' : ''}/>
+  <input type="checkbox" id="${id}" ${done ? "checked" : ""}/>
   <label for="${id}">
     <svg viewBox="0 0 20 15">
       <path d="M0 8l2-2 5 5L18 0l2 2L7 15z" fill-rule="nonzero" />
@@ -152,5 +156,4 @@ function debounce(callback, wait, immediate) {
     timeout = setTimeout(later, wait);
     if (callNow) callback.apply(context, args);
   };
-};
-
+}
